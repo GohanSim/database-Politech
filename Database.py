@@ -7,15 +7,17 @@ from psycopg2 import sql, Error
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
+import json
+
 OVERDUE_FINE_PER_DAY = Decimal("10.00")
 
-DB_CONFIG = {
-    "dbname": "LibraryDB",
-    "host": "127.0.0.1",
-    "user": "postgres",
-    "password": "123456789",
-    "port": "5432",
-}
+with open('CONFIG.json') as c:
+    raw_conf = json.load(c)
+    # Убираем пробелы в ключах и значениях, если они есть
+    conf = {k.strip(): v.strip() if isinstance(v, str) else v for k, v in raw_conf.items()}
+
+with open('FIELD_META.json', 'r', encoding = 'utf-8') as f:
+    field_meta = json.load(f)
 
 TABLES = [
     "publishers",
@@ -26,185 +28,6 @@ TABLES = [
     "loans",
     "operations",
 ]
-
-FIELD_META = {
-    "publishers": [
-        {
-            "name": "name",
-            "label": "Название издательства",
-            "type": "str",
-            "required": True,
-        },
-    ],
-
-    "authors": [
-        {
-            "name": "full_name",
-            "label": "Полное имя автора",
-            "type": "str",
-            "required": True,
-        },
-    ],
-
-    "books": [
-        {
-            "name": "author_id",
-            "label": "ID автора",
-            "type": "int",
-            "required": True,
-            "ref": ("authors", "author_id"),
-        },
-        {
-            "name": "title",
-            "label": "Название книги",
-            "type": "str",
-            "required": True,
-        },
-    ],
-
-    "editions": [
-        {
-            "name": "book_id",
-            "label": "ID книги",
-            "type": "int",
-            "required": True,
-            "ref": ("books", "book_id"),
-        },
-        {
-            "name": "publisher_id",
-            "label": "ID издателя",
-            "type": "int",
-            "required": True,
-            "ref": ("publishers", "publisher_id"),
-        },
-        {
-            "name": "title",
-            "label": "Название издания",
-            "type": "str",
-            "required": True,
-        },
-        {
-            "name": "publication_year",
-            "label": "Год издания",
-            "type": "int",
-            "required": False,
-        },
-        {
-            "name": "storage_location",
-            "label": "Место хранения",
-            "type": "str",
-            "required": False,
-        },
-        {
-            "name": "quantity",
-            "label": "Количество",
-            "type": "int",
-            "required": False,
-        },
-        {
-            "name": "price",
-            "label": "Стоимость экземпляра",
-            "type": "numeric",
-            "required": False,
-        },
-    ],
-
-    "readers": [
-        {
-            "name": "full_name",
-            "label": "ФИО читателя",
-            "type": "str",
-            "required": True,
-        },
-        {
-            "name": "registration_date",
-            "label": "Дата регистрации",
-            "type": "date",
-            "required": False,
-        },
-        {
-            "name": "phone",
-            "label": "Телефон",
-            "type": "str",
-            "required": False,
-        },
-        {
-            "name": "email",
-            "label": "Email",
-            "type": "str",
-            "required": False,
-        },
-    ],
-
-    "loans": [
-        {
-            "name": "edition_id",
-            "label": "ID издания",
-            "type": "int",
-            "required": True,
-            "ref": ("editions", "edition_id"),
-        },
-        {
-            "name": "reader_id",
-            "label": "ID читателя",
-            "type": "int",
-            "required": True,
-            "ref": ("readers", "reader_id"),
-        },
-        {
-            "name": "issue_date",
-            "label": "Дата выдачи",
-            "type": "date",
-            "required": True,
-        },
-        {
-            "name": "return_date",
-            "label": "Дата возврата",
-            "type": "date",
-            "required": False,
-        },
-        {
-            "name": "due_date",
-            "label": "Срок возврата",
-            "type": "date",
-            "required": True,
-        },
-        {
-            "name": "extensions",
-            "label": "Количество продлений",
-            "type": "int",
-            "required": False,
-        },
-    ],
-
-    "operations": [
-        {
-            "name": "loan_id",
-            "label": "ID выдачи",
-            "type": "int",
-            "required": True,
-            "ref": ("loans", "loan_id"),
-        },
-        {
-            "name": "operation_type",
-            "label": "Тип операции",
-            "type": "str",
-            "required": True,
-        },
-        {
-            "name": "status",
-            "label": "Статус",
-            "type": "str",
-            "required": True,
-        },
-        {
-            "name": "amount",
-            "label": "Сумма",
-            "type": "numeric",
-            "required": False,
-        },
-    ],
-}
 
 class LibraryApp(tk.Tk):
     def __init__(self):
@@ -228,7 +51,7 @@ class LibraryApp(tk.Tk):
     # Работа с подключение
     def connect_db(self, show_error=False):
         try:
-            self.conn = psycopg2.connect(**DB_CONFIG)
+            self.conn = psycopg2.connect(**conf)
             self.conn.autocommit = False
             return True
         except Error as e:
@@ -493,7 +316,7 @@ class LibraryApp(tk.Tk):
         self.add_entries.clear()
 
         table = self.add_table_combo.get()
-        fields = FIELD_META.get(table, [])
+        fields = field_meta.get(table, [])
 
         for row, field in enumerate(fields):
             label_text = field["label"]
@@ -610,7 +433,7 @@ class LibraryApp(tk.Tk):
         if not self.ensure_connection():
             return
 
-        fields = FIELD_META.get(table, [])
+        fields = field_meta.get(table, [])
         values = {}
 
         # Проверка и преобразование значений

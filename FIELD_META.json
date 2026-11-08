@@ -1,0 +1,178 @@
+{
+    "publishers": [
+        {
+            "name": "name",
+            "label": "Название издательства",
+            "type": "str",
+            "required": true
+        }
+    ],
+
+    "authors": [
+        {
+            "name": "full_name",
+            "label": "Полное имя автора",
+            "type": "str",
+            "required": true
+        }
+    ],
+
+    "books": [
+        {
+            "name": "author_id",
+            "label": "ID автора",
+            "type": "int",
+            "required": true,
+            "ref": ["authors", "author_id"]
+        },
+        {
+            "name": "title",
+            "label": "Название книги",
+            "type": "str",
+            "required": true
+        }
+    ],
+
+    "editions": [
+        {
+            "name": "book_id",
+            "label": "ID книги",
+            "type": "int",
+            "required": true,
+            "ref": ["books", "book_id"]
+        },
+        {
+            "name": "publisher_id",
+            "label": "ID издателя",
+            "type": "int",
+            "required": true,
+            "ref": ["publishers", "publisher_id"]
+        },
+        {
+            "name": "title",
+            "label": "Название издания",
+            "type": "str",
+            "required": true
+        },
+        {
+            "name": "publication_year",
+            "label": "Год издания",
+            "type": "int",
+            "required": false
+        },
+        {
+            "name": "storage_location",
+            "label": "Место хранения",
+            "type": "str",
+            "required": false
+        },
+        {
+            "name": "quantity",
+            "label": "Количество",
+            "type": "int",
+            "required": false
+        },
+        {
+            "name": "price",
+            "label": "Стоимость экземпляра",
+            "type": "numeric",
+            "required": false
+        }
+    ],
+
+    "readers": [
+        {
+            "name": "full_name",
+            "label": "ФИО читателя",
+            "type": "str",
+            "required": true
+        },
+        {
+            "name": "registration_date",
+            "label": "Дата регистрации",
+            "type": "date",
+            "required": false
+        },
+        {
+            "name": "phone",
+            "label": "Телефон",
+            "type": "str",
+            "required": false
+        },
+        {
+            "name": "email",
+            "label": "Email",
+            "type": "str",
+            "required": false
+        }
+    ],
+
+    "loans": [
+        {
+            "name": "edition_id",
+            "label": "ID издания",
+            "type": "int",
+            "required": true,
+            "ref": ["editions", "edition_id"]
+        },
+        {
+            "name": "reader_id",
+            "label": "ID читателя",
+            "type": "int",
+            "required": true,
+            "ref": ["readers", "reader_id"]
+        },
+        {
+            "name": "issue_date",
+            "label": "Дата выдачи",
+            "type": "date",
+            "required": true
+        },
+        {
+            "name": "return_date",
+            "label": "Дата возврата",
+            "type": "date",
+            "required": false
+        },
+        {
+            "name": "due_date",
+            "label": "Срок возврата",
+            "type": "date",
+            "required": true
+        },
+        {
+            "name": "extensions",
+            "label": "Количество продлений",
+            "type": "int",
+            "required": false
+        }
+    ],
+
+    "operations": [
+        {
+            "name": "loan_id",
+            "label": "ID выдачи",
+            "type": "int",
+            "required": true,
+            "ref": ["loans", "loan_id"]
+        },
+        {
+            "name": "operation_type",
+            "label": "Тип операции",
+            "type": "str",
+            "required": true
+        },
+        {
+            "name": "status",
+            "label": "Статус",
+            "type": "str",
+            "required": true
+        },
+        {
+            "name": "amount",
+            "label": "Сумма",
+            "type": "numeric",
+            "required": false
+        }
+    ]
+}
