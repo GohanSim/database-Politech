@@ -4,7 +4,7 @@ from tkinter import ttk, messagebox
 import psycopg2
 from psycopg2 import sql, Error
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
 import json
@@ -371,6 +371,22 @@ class LibraryApp(tk.Tk):
 
         self.add_form.columnconfigure(1, weight=1)
 
+        if table == "loans":
+            fine_frame = ttk.Frame(self.add_form)
+            fine_frame.grid(
+                row=len(fields),
+                column=1,
+                sticky="w",
+                padx=10,
+                pady=5
+            )   
+
+            ttk.Button(
+                fine_frame,
+                text = "Рассчитать срок возврата",
+                command = self.fill_due_date
+            ).pack(side="left", padx=(0, 5))
+
         if table == "operations":
             fine_frame = ttk.Frame(self.add_form)
         
@@ -553,6 +569,31 @@ class LibraryApp(tk.Tk):
 
         self.add_entries["amount"].delete(0, tk.END)
         self.add_entries["amount"].insert(0, str(amount))
+
+    def fill_due_date(self):
+        date_issue = self.add_entries["issue_date"].get().strip()
+        if not date_issue:
+            messagebox.showwarning(
+                "Срок возврата",
+                "Сначала укажите дату выдачи книги."
+            )
+            return
+
+        try:
+            issue_date_obj = datetime.strptime(date_issue, "%Y-%m-%d").date()
+
+            due_date_obj = issue_date_obj + timedelta(days = 14)
+
+            due_date_str = due_date_obj.strftime("%Y-%m-%d")
+
+            self.add_entries["due_date"].delete(0, tk.END)
+            self.add_entries["due_date"].insert(0, due_date_str)
+
+        except ValueError:
+            messagebox.showerror(
+                "Ошибка формата",
+                "Неверный формат даты выдачи. Используйте формат ГГГГ-ММ-ДД."
+            )
 
     def fill_overdue_fine(self):
         loan_id_raw = self.add_entries["loan_id"].get().strip()
