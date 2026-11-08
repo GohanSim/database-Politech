@@ -13,7 +13,6 @@ OVERDUE_FINE_PER_DAY = Decimal("10.00")
 
 with open('CONFIG.json') as c:
     raw_conf = json.load(c)
-    # Убираем пробелы в ключах и значениях, если они есть
     conf = {k.strip(): v.strip() if isinstance(v, str) else v for k, v in raw_conf.items()}
 
 with open('FIELD_META.json', 'r', encoding = 'utf-8') as f:
@@ -29,12 +28,19 @@ TABLES = [
     "operations",
 ]
 
+TYPE_OPERATIONS = [
+    "Выдача книги",
+    "Продление срока",
+    "Штраф за просрочку",
+    "Штраф за потерю/порчу",
+]
+
 class LibraryApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
         self.title("База данных библиотеки")
-        self.geometry("1200x800")
+        self.geometry("1000x600")
         self.minsize(900, 600)
 
         self.conn = None
@@ -314,7 +320,6 @@ class LibraryApp(tk.Tk):
             widget.destroy()
 
         self.add_entries.clear()
-
         table = self.add_table_combo.get()
         fields = field_meta.get(table, [])
 
@@ -328,11 +333,20 @@ class LibraryApp(tk.Tk):
                 text=label_text
             ).grid(row=row, column=0, sticky="w", padx=10, pady=5)
 
-            entry = ttk.Entry(self.add_form, width=45)
+            if field.get("name") == "operation_type":
+                entry = ttk.Combobox(
+                    self.add_form,
+                    values=TYPE_OPERATIONS,
+                    state="readonly",
+                    width=42
+                    )        
+                entry.set(TYPE_OPERATIONS[0])
+            else:
+                entry = ttk.Entry(self.add_form, width=45)
+
             entry.grid(row=row, column=1, sticky="we", padx=10, pady=5)
 
             hints = []
-
             if field.get("type") == "date":
                 hints.append("формат: ГГГГ-ММ-ДД")
 
@@ -359,14 +373,14 @@ class LibraryApp(tk.Tk):
 
         if table == "operations":
             fine_frame = ttk.Frame(self.add_form)
+        
             fine_frame.grid(
                 row=len(fields),
                 column=1,
                 sticky="w",
                 padx=10,
                 pady=5
-            )
-
+            )    
             ttk.Button(
                 fine_frame,
                 text="Рассчитать штраф за просрочку",
